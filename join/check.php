@@ -42,6 +42,9 @@ if(!isset($_SESSION['join'])){
 		</dd>
 		<dt>写真など</dt>
 		<dd>
+		<?php if($_SESSION['join']['image'] !== ''): ?>
+			<img src="../member_picture/<?php print(htmlspecialchars($_SESSION['join']['image'], ENT_QUOTES)); ?>" alt="画像表示場所">
+		<?php endif; ?>
 		</dd>
 	</dl>
 	<!-- action=rewrite とURLパラメータを付けることで、index.php側で書き直すボタンから飛んできたことが判別出来るようになる -->
