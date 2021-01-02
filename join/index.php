@@ -1,4 +1,7 @@
 <?php
+// check.phpへ値を渡すために一時保存であるセッションを使う
+session_start();
+
 if(!empty($_POST)){
 	if($_POST['name'] === ''){
 		$error['name'] = 'blank';
@@ -13,11 +16,31 @@ if(!empty($_POST)){
 	if($_POST['password'] === ''){
 		$error['password'] = 'blank';
 	}
+	$fileName = $_FILES['image']['name'];
+	if(!empty($fileName)) {
+		// 第二引数の-3 で後ろ3文字を取得することで、拡張子を得る
+		$ext = substr($fileName, -3);
+		if($ext != 'jpg' && $ext != 'gif' && $ext != 'png'){
+			$error['image'] = 'type';
+		}
+	}
 	if(empty($error)){
+		$image = date('YmdHis') . $_FILES['image']['name'];
+		// move_uploaded_file()で グローバル変数$_FILESの一時保管場所['tmp_name']にある画像ファイルを第二引数で示した場所に保存する
+		move_uploaded_file($_FILES['image']['tmp_name'], '../member_picture/' . $image);
+		// 何もエラーが起きていない場合に、$_POSTを一時保存させる
+		$_SESSION['join'] = $_POST;
+		$_SESSION['join']['image'];
 		header('Location: check.php');
 		exit();
 	}
 }
+
+// check.php の書き直すリンクから飛んできた場合に、セッションに保存した情報を$_POST に入れる
+if($_REQUEST['action'] == 'rewrite' && isset($_SESSION['join'])){
+	$_POST = $_SESSION['join'];
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -39,6 +62,7 @@ if(!empty($_POST)){
 
 		<div id="content">
 			<p>次のフォームに必要事項をご記入ください。</p>
+			<!-- ファイルをアップロードする場合には、enctype="multipart/form-data"を指定する -->
 			<form action="" method="post" enctype="multipart/form-data">
 				<dl>
 					<dt>ニックネーム<span class="required">必須</span></dt>
@@ -66,7 +90,11 @@ if(!empty($_POST)){
 					</dd>
 					<dt>写真など</dt>
 					<dd>
+						<!-- typeを file にすると、ファイル選択ボタンが追加される -->
 						<input type="file" name="image" size="35" value="test" />
+						<?php if($error['image'] === 'type'): ?>
+						<p class="error">* 画像ファイルを指定してください</p>
+						<?php endif; ?>
 					</dd>
 				</dl>
 				<div><input type="submit" value="入力内容を確認する" /></div>

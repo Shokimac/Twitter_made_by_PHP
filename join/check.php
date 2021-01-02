@@ -1,3 +1,12 @@
+<?php
+session_start();
+// $_SESSION['join]が、空の場合は強制的に index.phpへ戻す
+if(!isset($_SESSION['join'])){
+	header('Location: index.php');
+	exit();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -21,9 +30,11 @@
 	<dl>
 		<dt>ニックネーム</dt>
 		<dd>
+			<?php print(htmlspecialchars($_SESSION['join']['name'], ENT_QUOTES)); ?>
         </dd>
 		<dt>メールアドレス</dt>
 		<dd>
+			<?php print(htmlspecialchars($_SESSION['join']['email'], ENT_QUOTES)); ?>
         </dd>
 		<dt>パスワード</dt>
 		<dd>
@@ -33,6 +44,7 @@
 		<dd>
 		</dd>
 	</dl>
+	<!-- action=rewrite とURLパラメータを付けることで、index.php側で書き直すボタンから飛んできたことが判別出来るようになる -->
 	<div><a href="index.php?action=rewrite">&laquo;&nbsp;書き直す</a> | <input type="submit" value="登録する" /></div>
 </form>
 </div>
