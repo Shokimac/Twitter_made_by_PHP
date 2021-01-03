@@ -1,8 +1,24 @@
 <?php
 session_start();
+require('../dbconnect.php');
 // $_SESSION['join]が、空の場合は強制的に index.phpへ戻す
 if(!isset($_SESSION['join'])){
 	header('Location: index.php');
+	exit();
+}
+
+if(!empty($_POST)){
+	$statement = $db->prepare('INSERT INTO members SET name=?, email=?, password=?, picture=?, created=NOW()');
+	$statement->execute(array(
+		$_SESSION['join']['name'],
+		$_SESSION['join']['email'],
+		sha1($_SESSION['join']['password']),
+		$_SESSION['join']['image']
+	));
+	// DBに登録したので、unset で一時保管情報を削除する
+	unset($_SESSION['join']);
+
+	header('Location: thanks.php');
 	exit();
 }
 ?>
@@ -26,6 +42,7 @@ if(!isset($_SESSION['join'])){
 <div id="content">
 <p>記入した内容を確認して、「登録する」ボタンをクリックしてください</p>
 <form action="" method="post">
+	<!-- hidden の value に、submit を指定することで、確認画面の登録ボタンが押された際に、$_POST へsubmitが渡りボタンが押されたことを検知できる -->
 	<input type="hidden" name="action" value="submit" />
 	<dl>
 		<dt>ニックネーム</dt>
