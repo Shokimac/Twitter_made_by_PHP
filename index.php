@@ -1,3 +1,22 @@
+<?php
+session_start();
+require('dbconnect.php');
+
+// $_SESSION['time'] に 1時間(3600秒)を足して、現在の時刻よりも大きい場合
+// 1時間何もしないでいるとログアウトされてしまうことになる
+// つまり、ログインをしている状態の記述を以下に書く
+if(isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()){
+  //　最後のログインから1時間、ログインを有効にさせる
+  $_SESSION['time'] = time();
+  $members = $db->prepare('SELECT * FROM members WHERE id=?');
+  $members->execute(array($_SESSION['id']));
+  $member = $members->fetch();
+}else{
+  header('Location: login.php');
+  exit();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -18,7 +37,7 @@
   	<div style="text-align: right"><a href="logout.php">ログアウト</a></div>
     <form action="" method="post">
       <dl>
-        <dt>○○さん、メッセージをどうぞ</dt>
+        <dt><?php print(htmlspecialchars($member['name'], ENT_QUOTES)); ?>さん、メッセージをどうぞ</dt>
         <dd>
           <textarea name="message" cols="50" rows="5"></textarea>
           <input type="hidden" name="reply_post_id" value="" />
