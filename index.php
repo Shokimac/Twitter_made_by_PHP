@@ -32,8 +32,31 @@ if (!empty($_POST)) {
   }
 }
 
+// ページネーション の為に定義
+$page = $_REQUEST['page'];
+// if($page == ''){
+//   $page = 1;
+// }
+// 比較して大きい方を選択する maxメソッドで、$pageが 1より低い場合が指定されても 1ページ目を出すようにさせる
+$page = max($page, 1);
+
+// 大きい数字が指定された場合でも、最終ページを選択するようにする
+$counts = $db->query('SELECT COUNT(*) AS cnt FROM posts');
+$cnt = $counts->fetch();
+// sql でエイリアスとして指定した cntをキーとして 5で割る
+$maxPage = ceil($cnt['cnt'] / 5);
+$page = min($page, $maxPage);
+
+$start = ($page - 1) * 5;
+
 // ユーザーの書き込み等ではない為、直接queryメソッドを呼び出す
-$posts = $db->query('SELECT m.name, m.picture, p.* FROM members m, posts p WHERE m.id=p.member_id ORDEr BY p.created DESC ');
+// $posts = $db->query('SELECT m.name, m.picture, p.* FROM members m, posts p WHERE m.id=p.member_id ORDEr BY p.created DESC LIMIT 0, 5 ');
+// ページネーション 実装で柔軟に取得するため、上記のqueryメソッドから prepareメソッドに変更する
+$posts = $db->prepare('SELECT m.name, m.picture, p.* FROM members m, posts p WHERE m.id=p.member_id ORDEr BY p.created DESC LIMIT ?, 5 ');
+// execute()だと文字列として渡ってしまう為、bindParam() PDO::PARAM_INTで数字として指定する
+$posts->bindParam(1, $start, PDO::PARAM_INT);
+$posts->execute();
+
 
 // 返信用リンク Re がクリックされた時に URLパラメータに res= と付くので、そこに値が入っていた場合
 if (isset($_REQUEST['res'])) {
@@ -97,8 +120,12 @@ if (isset($_REQUEST['res'])) {
       <?php endforeach; ?>
 
       <ul class="paging">
-        <li><a href="index.php?page=">前のページへ</a></li>
-        <li><a href="index.php?page=">次のページへ</a></li>
+        <?php if ($page - 1 > 0) : ?>
+          <li><a href="index.php?page=<?php print($page - 1); ?>">前のページへ</a></li>
+        <?php endif; ?>
+        <?php if ($page < $maxPage) : ?>
+          <li><a href="index.php?page=<?php print($page + 1); ?>">次のページへ</a></li>
+        <?php endif; ?>
       </ul>
     </div>
   </div>
